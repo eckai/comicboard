@@ -66,20 +66,15 @@ export function AuthProvider({ children }) {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            display_name: displayName,
+            role,
+          },
+        },
       })
 
       if (authError) throw authError
-
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email,
-          display_name: displayName,
-          role,
-        })
-
-      if (profileError) throw profileError
 
       return { data: authData, error: null }
     } catch (err) {

@@ -64,18 +64,16 @@ export default function InvitePage() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            display_name: displayName,
+            role: 'worker',
+          },
+        },
       })
       if (authError) throw authError
 
       const userId = authData.user.id
-
-      const { error: profileError } = await supabase.from('users').insert({
-        id: userId,
-        email,
-        display_name: displayName,
-        role: 'worker',
-      })
-      if (profileError) throw profileError
 
       const { error: inviteError } = await supabase
         .from('invites')
