@@ -9,7 +9,8 @@ import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import Modal from '@/components/ui/Modal'
 import Badge from '@/components/ui/Badge'
-import { Plus, FolderKanban } from 'lucide-react'
+import { Plus, FolderKanban, Trash2 } from 'lucide-react'
+import { CURRENCY_OPTIONS } from '@/lib/currency'
 
 export default function ProjectsPage() {
   const { profile, isManager } = useAuth()
@@ -27,6 +28,7 @@ export default function ProjectsPage() {
     worker_id: '',
     workflow_id: '',
     payment_mode: 'on_completion',
+    currency: 'USD',
   })
 
   useEffect(() => {
@@ -44,17 +46,12 @@ export default function ProjectsPage() {
       setProjects(projectData || [])
 
       if (isManager) {
-        const [wfRes, invRes] = await Promise.all([
+        const [wfRes, workerRes] = await Promise.all([
           supabase.from('workflows').select('id, name').eq('manager_id', profile.id),
-          supabase.from('invites').select('used_by').eq('manager_id', profile.id).not('used_by', 'is', null),
+          supabase.from('users').select('id, display_name, email').eq('role', 'worker'),
         ])
         setWorkflows(wfRes.data || [])
-
-        const workerIds = [...new Set((invRes.data || []).map(i => i.used_by))]
-        if (workerIds.length > 0) {
-          const { data: workerData } = await supabase.from('users').select('id, display_name, email').in('id', workerIds)
-          setWorkers(workerData || [])
-        }
+        setWorkers(workerRes.data || [])
       }
     } catch (err) {
       console.error('Load projects error:', err)
@@ -64,7 +61,7 @@ export default function ProjectsPage() {
   }
 
   const handleCreate = async () => {
-    if (!form.name || !form.worker_id || !form.workflow_id) return
+    if (!form.name || !form.worker_id) return
     setSaving(true)
     try {
       const { data, error } = await supabase
@@ -73,20 +70,33 @@ export default function ProjectsPage() {
           name: form.name,
           manager_id: profile.id,
           worker_id: form.worker_id,
-          workflow_id: form.workflow_id,
+          workflow_id: form.workflow_id || null,
           payment_mode: form.payment_mode,
+          currency: form.currency,
         })
         .select()
         .single()
 
       if (error) throw error
       setModalOpen(false)
-      setForm({ name: '', worker_id: '', workflow_id: '', payment_mode: 'on_completion' })
+      setForm({ name: '', worker_id: '', workflow_id: '', payment_mode: 'on_completion', currency: 'USD' })
       loadData()
     } catch (err) {
       console.error('Create project error:', err)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const deleteProject = async (e, projectId) => {
+    e.stopPropagation()
+    if (!confirm('Delete this project? All tiles, payments, and history will be permanently removed.')) return
+    try {
+      const { error } = await supabase.from('projects').delete().eq('id', projectId)
+      if (error) throw error
+      loadData()
+    } catch (err) {
+      console.error('Delete project error:', err)
     }
   }
 
@@ -127,7 +137,17 @@ export default function ProjectsPage() {
                 onClick={() => navigate(`/projects/${project.id}`)}
               >
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg">{project.name}</h3>
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-semibold text-lg">{project.name}</h3>
+                    {isManager && (
+                      <button
+                        onClick={(e) => deleteProject(e, project.id)}
+                        className="p-1 text-muted-foreground hover:text-destructive rounded"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {isManager ? `Artist: ${project.worker?.display_name || 'Unassigned'}` : `Manager: ${project.manager?.display_name || ''}`}
                   </p>
@@ -169,6 +189,12 @@ export default function ProjectsPage() {
             value={form.payment_mode}
             onChange={(e) => setForm({ ...form, payment_mode: e.target.value })}
             options={paymentModeOptions}
+          />
+          <Select
+            label="Currency"
+            value={form.currency}
+            onChange={(e) => setForm({ ...form, currency: e.target.value })}
+            options={CURRENCY_OPTIONS}
           />
 
           <div className="flex justify-end gap-2 pt-2">

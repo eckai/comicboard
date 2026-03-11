@@ -11,7 +11,7 @@ export default function Dashboard() {
   const { profile, isManager } = useAuth()
   const { onMenuToggle } = useOutletContext()
   const navigate = useNavigate()
-  const [stats, setStats] = useState({ projects: 0, pendingApprovals: 0, totalOwed: 0, completedTiles: 0 })
+  const [stats, setStats] = useState({ projects: 0, pendingApprovals: 0, totalOwed: 0, totalPaid: 0, completedTiles: 0 })
   const [recentProjects, setRecentProjects] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -31,7 +31,7 @@ export default function Dashboard() {
 
       const projectIds = (projects || []).map(p => p.id)
       if (projectIds.length === 0) {
-        setStats({ projects: 0, pendingApprovals: 0, totalOwed: 0, completedTiles: 0 })
+        setStats({ projects: 0, pendingApprovals: 0, totalOwed: 0, totalPaid: 0, completedTiles: 0 })
         setLoading(false)
         return
       }
@@ -50,6 +50,7 @@ export default function Dashboard() {
         projects: projectIds.length,
         pendingApprovals: tiles.filter(t => t.status === 'pending_approval').length,
         totalOwed: payments.filter(p => p.status === 'owed').reduce((sum, p) => sum + Number(p.amount), 0),
+        totalPaid: payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + Number(p.amount), 0),
         completedTiles: tiles.filter(t => t.status === 'completed' || t.status === 'archived').length,
       })
     } catch (err) {
@@ -62,7 +63,10 @@ export default function Dashboard() {
   const statCards = [
     { icon: FolderKanban, label: 'Projects', value: stats.projects, color: 'text-primary' },
     { icon: Clock, label: 'Pending Approvals', value: stats.pendingApprovals, color: 'text-pending' },
-    { icon: DollarSign, label: 'Total Owed', value: `$${stats.totalOwed.toFixed(2)}`, color: 'text-destructive' },
+    ...(isManager ? [
+      { icon: DollarSign, label: 'Total Owed', value: `$${stats.totalOwed.toFixed(2)}`, color: 'text-destructive' },
+      { icon: DollarSign, label: 'Total Paid', value: `$${stats.totalPaid.toFixed(2)}`, color: 'text-approved' },
+    ] : []),
     { icon: CheckCircle, label: 'Completed Tiles', value: stats.completedTiles, color: 'text-approved' },
   ]
 
@@ -74,7 +78,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground">Loading dashboard...</p>
         ) : (
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
               {statCards.map(stat => {
                 const Icon = stat.icon
                 return (

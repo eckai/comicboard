@@ -1,8 +1,10 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import Badge from '@/components/ui/Badge'
+import { formatCurrency } from '@/lib/currency'
+import { Info } from 'lucide-react'
 
-export default function TileCard({ tile, onClick, isDragging }) {
+export default function TileCard({ tile, onClick, isDragging, currency = 'USD' }) {
   const {
     attributes,
     listeners,
@@ -40,27 +42,33 @@ export default function TileCard({ tile, onClick, isDragging }) {
       style={style}
       {...attributes}
       {...listeners}
-      onClick={(e) => { e.stopPropagation(); onClick?.(tile) }}
       className="cursor-grab rounded-lg border border-border bg-white p-3 shadow-sm hover:shadow-md transition-shadow active:cursor-grabbing"
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium">{tile.title}</p>
-        {statusBadge()}
+        <div className="flex items-center gap-1 shrink-0">
+          {statusBadge()}
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onClick?.(tile) }}
+            className="rounded p-0.5 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+            title="View details"
+          >
+            <Info className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       {totalValue > 0 && (
         <div className="mt-2 flex items-center gap-2 text-xs">
           <span className="text-muted-foreground">
-            ${paidAmount.toFixed(2)} / ${totalValue.toFixed(2)}
+            {formatCurrency(paidAmount, currency)} / {formatCurrency(totalValue, currency)}
           </span>
           {owedAmount > 0 && (
-            <Badge variant="pending">${owedAmount.toFixed(2)} owed</Badge>
+            <Badge variant="pending">{formatCurrency(owedAmount, currency)} owed</Badge>
           )}
         </div>
       )}
-
-      {/* Reserved space for future thumbnail */}
-      <div className="mt-2 h-0" />
     </div>
   )
 }

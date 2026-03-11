@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import { CheckCircle, DollarSign } from 'lucide-react'
+import { formatCurrency } from '@/lib/currency'
 
-export default function TileListView({ tiles, stages, isManager, onTileClick, onApprove, onMarkPaid }) {
+export default function TileListView({ tiles, stages, isManager, onTileClick, onApprove, onMarkPaid, currency = 'USD' }) {
   const [filterStage, setFilterStage] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterPayment, setFilterPayment] = useState('')
@@ -148,8 +149,8 @@ export default function TileListView({ tiles, stages, isManager, onTileClick, on
                       <Badge>Active</Badge>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-right">${Number(tile.total_value || 0).toFixed(2)}</td>
-                  <td className="px-3 py-2 text-right text-approved">${paidAmount.toFixed(2)}</td>
+                  <td className="px-3 py-2 text-right">{formatCurrency(tile.total_value, currency)}</td>
+                  <td className="px-3 py-2 text-right text-approved">{formatCurrency(paidAmount, currency)}</td>
                   {isManager && (
                     <td className="px-3 py-2 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-1">

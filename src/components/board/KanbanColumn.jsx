@@ -2,7 +2,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import TileCard from './TileCard'
 
-export default function KanbanColumn({ stage, tiles, onTileClick }) {
+export default function KanbanColumn({ stage, tiles, onTileClick, currency }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id })
 
   return (
@@ -21,7 +21,7 @@ export default function KanbanColumn({ stage, tiles, onTileClick }) {
       >
         <SortableContext items={tiles.map(t => t.id)} strategy={verticalListSortingStrategy}>
           {tiles.map(tile => (
-            <TileCard key={tile.id} tile={tile} onClick={onTileClick} />
+            <TileCard key={tile.id} tile={tile} onClick={onTileClick} currency={currency} />
           ))}
         </SortableContext>
       </div>
