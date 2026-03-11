@@ -30,6 +30,31 @@
   --radius-xl: 0.75rem;
 }
 
+.dark {
+  --color-primary: #818cf8;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1e293b;
+  --color-secondary-foreground: #e2e8f0;
+  --color-destructive: #f87171;
+  --color-destructive-foreground: #ffffff;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  --color-accent: #1e293b;
+  --color-accent-foreground: #e2e8f0;
+  --color-card: #0f172a;
+  --color-card-foreground: #e2e8f0;
+  --color-border: #334155;
+  --color-input: #334155;
+  --color-ring: #818cf8;
+  --color-background: #0f172a;
+  --color-foreground: #e2e8f0;
+
+  --color-pending: #fbbf24;
+  --color-approved: #4ade80;
+  --color-paid: #60a5fa;
+  --color-archived: #64748b;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -40,4 +65,9 @@ body {
 
 #root {
   min-height: 100vh;
+}
+
+/* Dark mode overrides for elements using hardcoded bg-white */
+.dark .bg-white {
+  background-color: var(--color-card);
 }

@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Workflow, Users, LogOut, ChevronLeft } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Workflow, Users, LogOut, ChevronLeft, Settings } from 'lucide-react'
 import Button from '@/components/ui/Button'
 
 export default function Sidebar({ collapsed, onToggle }) {
@@ -13,6 +13,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     { icon: FolderKanban, label: 'Projects', path: '/projects', show: true },
     { icon: Workflow, label: 'Workflows', path: '/workflows', show: isManager },
     { icon: Users, label: 'Workers', path: '/workers', show: isManager },
+    { icon: Settings, label: 'Settings', path: '/settings', show: true },
   ]
 
   const handleSignOut = async () => {

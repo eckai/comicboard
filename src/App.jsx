@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import AppShell from '@/components/layout/AppShell'
 import LoginPage from '@/components/auth/LoginPage'
 import InvitePage from '@/components/auth/InvitePage'
@@ -9,6 +10,7 @@ import ProjectsPage from '@/components/pages/ProjectsPage'
 import ProjectBoard from '@/components/pages/ProjectBoard'
 import WorkflowsPage from '@/components/pages/WorkflowsPage'
 import WorkersPage from '@/components/pages/WorkersPage'
+import SettingsPage from '@/components/pages/SettingsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +80,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -88,11 +91,13 @@ function AppRoutes() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   )
 }

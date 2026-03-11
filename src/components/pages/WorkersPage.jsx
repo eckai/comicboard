@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Modal from '@/components/ui/Modal'
 import Badge from '@/components/ui/Badge'
-import { Plus, Copy, Users, UserPlus } from 'lucide-react'
+import { Plus, Copy, Users, UserPlus, KeyRound } from 'lucide-react'
 
 export default function WorkersPage() {
   const { profile } = useAuth()
@@ -35,6 +35,7 @@ export default function WorkersPage() {
   const [credsCopied, setCredsCopied] = useState(false)
   const [managerPassword, setManagerPassword] = useState('')
   const [needsReauth, setNeedsReauth] = useState(false)
+  const [resetStatus, setResetStatus] = useState({})
 
   useEffect(() => {
     loadData()
@@ -177,6 +178,22 @@ export default function WorkersPage() {
     }
   }
 
+  const sendPasswordReset = async (worker) => {
+    setResetStatus(prev => ({ ...prev, [worker.id]: 'sending' }))
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(worker.email, {
+        redirectTo: `${window.location.origin}/settings`,
+      })
+      if (error) throw error
+      setResetStatus(prev => ({ ...prev, [worker.id]: 'sent' }))
+      setTimeout(() => setResetStatus(prev => ({ ...prev, [worker.id]: null })), 3000)
+    } catch (err) {
+      console.error('Reset password error:', err)
+      setResetStatus(prev => ({ ...prev, [worker.id]: 'error' }))
+      setTimeout(() => setResetStatus(prev => ({ ...prev, [worker.id]: null })), 3000)
+    }
+  }
+
   const resetCreateModal = () => {
     setCreateModalOpen(false)
     setNewWorkerName('')
@@ -221,8 +238,26 @@ export default function WorkersPage() {
                   {workers.map(worker => (
                     <Card key={worker.id}>
                       <CardContent className="p-4">
-                        <p className="font-medium">{worker.display_name}</p>
-                        <p className="text-sm text-muted-foreground">{worker.email}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-medium">{worker.display_name}</p>
+                            <p className="text-sm text-muted-foreground">{worker.email}</p>
+                          </div>
+                          <button
+                            onClick={() => sendPasswordReset(worker)}
+                            disabled={resetStatus[worker.id] === 'sending'}
+                            className="shrink-0 rounded p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                            title="Send password reset email"
+                          >
+                            <KeyRound className="h-4 w-4" />
+                          </button>
+                        </div>
+                        {resetStatus[worker.id] === 'sent' && (
+                          <p className="mt-2 text-xs text-approved">Reset email sent!</p>
+                        )}
+                        {resetStatus[worker.id] === 'error' && (
+                          <p className="mt-2 text-xs text-destructive">Failed to send reset email.</p>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
