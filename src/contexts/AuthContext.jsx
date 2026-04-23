@@ -36,6 +36,10 @@ export function AuthProvider({ children }) {
         }
       } catch (err) {
         console.error('Error getting session:', err.message)
+        // Clear corrupted session data so the user can log in fresh
+        await supabase.auth.signOut({ scope: 'local' })
+        setUser(null)
+        setProfile(null)
       } finally {
         setLoading(false)
       }
@@ -45,7 +49,12 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          // Token refresh failed — clear stale local session
+          await supabase.auth.signOut({ scope: 'local' })
+          setUser(null)
+          setProfile(null)
+        } else if (session?.user) {
           setUser(session.user)
           await fetchProfile(session.user.id)
         } else {
@@ -102,14 +111,16 @@ export function AuthProvider({ children }) {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
-
-      setUser(null)
-      setProfile(null)
-      return { error: null }
     } catch (err) {
       console.error('Error signing out:', err.message)
-      return { error: err }
+      // Force local cleanup even if server-side signout fails
+      // (e.g. expired/corrupted token)
+      await supabase.auth.signOut({ scope: 'local' })
+    } finally {
+      setUser(null)
+      setProfile(null)
     }
+    return { error: null }
   }, [])
 
   const isManager = profile?.role === 'manager'
